@@ -3,7 +3,7 @@
 // 每次更新遊戲檔案後，一定要改這個版本號（例如 1.0.0 → 1.0.1），
 // 玩家的 App 才會偵測到新版並跳出「有新版本」提示。
 // ============================================================
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 
 const CACHE = 'sudoku-' + VERSION;
 const FONT_CACHE = 'sudoku-fonts';
