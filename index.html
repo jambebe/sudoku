@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>數獨</title>
+<!-- PWA / iOS 主畫面設定 -->
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-180.png">
+<link rel="icon" type="image/png" href="./icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="數獨">
+<meta name="theme-color" content="#E6ECEF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111A22" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E6ECEF; --board:#F8FAFB; --ink:#1B2A38; --ink-soft:#5A6B7A;
+  --pen:#2A5BA8; --line:#B9C6D0; --line-bold:#1B2A38;
+  --peer:#DCE6EE; --same:#BFD8CC; --sel:#9FC7B4; --wrong:#C23B2E; --wrong-bg:#F6DAD6;
+  --btn:#D3DDE4; --btn-on:#1B2A38; --btn-on-ink:#F8FAFB;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111A22; --board:#18232D; --ink:#E4ECF1; --ink-soft:#8FA2B1;
+    --pen:#7FB0F0; --line:#2E3E4C; --line-bold:#A9BBC8;
+    --peer:#1F2D39; --same:#24463B; --sel:#2F6451; --wrong:#FF8A7D; --wrong-bg:#4A2522;
+    --btn:#223240; --btn-on:#E4ECF1; --btn-on-ink:#111A22;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111A22; --board:#18232D; --ink:#E4ECF1; --ink-soft:#8FA2B1;
+  --pen:#7FB0F0; --line:#2E3E4C; --line-bold:#A9BBC8;
+  --peer:#1F2D39; --same:#24463B; --sel:#2F6451; --wrong:#FF8A7D; --wrong-bg:#4A2522;
+  --btn:#223240; --btn-on:#E4ECF1; --btn-on-ink:#111A22;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-user-select:none;user-select:none;
+  overscroll-behavior:none}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translate(-50%,150%);
+  display:flex;align-items:center;gap:14px;background:var(--btn-on);color:var(--btn-on-ink);padding:10px 10px 10px 18px;
+  border-radius:12px;z-index:20;transition:transform .25s ease-out;max-width:calc(100% - 28px)}
+.toast.show{transform:translate(-50%,0)}
+.toast button{border:0;background:var(--btn-on-ink);color:var(--btn-on);font:inherit;font-weight:700;padding:8px 14px;border-radius:8px;cursor:pointer}
+.ver{color:var(--ink-soft);font-size:.72rem;text-align:center;opacity:.7}
+.wrap{max-width:500px;margin:0 auto;padding:16px 14px 28px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:2.4rem;line-height:1;letter-spacing:.04em}
+.meta{display:flex;gap:14px;align-items:baseline;color:var(--ink-soft);font-size:.9rem}
+.meta b{color:var(--ink);font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.levels{display:flex;gap:6px;flex-wrap:wrap}
+.levels button{flex:1;min-width:0;border:0;background:transparent;color:var(--ink-soft);font:inherit;font-size:.95rem;
+  padding:8px 0;border-bottom:2px solid var(--line);cursor:pointer}
+.levels button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:700}
+.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(9,1fr);background:var(--board);
+  border:2.5px solid var(--line-bold);border-radius:4px;touch-action:manipulation;user-select:none}
+.cell{position:relative;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);font-family:"Fraunces",Georgia,serif;font-size:clamp(1.2rem,6vw,1.9rem);cursor:pointer;
+  transition:background-color .12s}
+.cell:nth-child(9n){border-right:0}
+.cell:nth-child(n+73){border-bottom:0}
+.cell.br{border-right:2px solid var(--line-bold)}
+.cell.bb{border-bottom:2px solid var(--line-bold)}
+.cell.peer{background:var(--peer)}
+.cell.same{background:var(--same)}
+.cell.sel{background:var(--sel)}
+.cell.given{color:var(--ink);font-weight:600}
+.cell.user{color:var(--pen);font-weight:400}
+.cell.wrong{color:var(--wrong);background:var(--wrong-bg)}
+.cell.sel.wrong{background:var(--sel)}
+.cell:focus-visible{outline:2px solid var(--pen);outline-offset:-3px}
+.notes{position:absolute;inset:2px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  font-family:"Noto Sans TC",system-ui,sans-serif;font-size:clamp(.5rem,2.3vw,.72rem);color:var(--ink-soft);line-height:1}
+.notes span{display:flex;align-items:center;justify-content:center}
+.notes span.hl{color:var(--ink);font-weight:700}
+.pop{animation:pop .22s ease-out}
+@keyframes pop{0%{transform:scale(.6)}100%{transform:scale(1)}}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tools button{border:0;background:transparent;color:var(--ink);font:inherit;font-size:.85rem;display:flex;flex-direction:column;
+  align-items:center;gap:4px;padding:6px 0;cursor:pointer;border-radius:10px}
+.tools svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tools button[aria-pressed="true"]{background:var(--btn-on);color:var(--btn-on-ink)}
+.tools button:disabled{opacity:.35;cursor:default}
+.pad{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+.pad button{border:0;border-radius:8px;background:var(--btn);color:var(--ink);cursor:pointer;padding:8px 0 5px;
+  display:flex;flex-direction:column;align-items:center;gap:1px;font:inherit}
+.pad button .d{font-family:"Fraunces",Georgia,serif;font-size:clamp(1.3rem,6vw,1.7rem);line-height:1.1;color:var(--pen)}
+.pad button .n{font-size:.68rem;color:var(--ink-soft)}
+.pad.notes-on button .d{color:var(--ink-soft);font-size:clamp(1rem,4.6vw,1.3rem)}
+.pad button.done{visibility:hidden}
+button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+.newgame{border:1.5px solid var(--ink);background:transparent;color:var(--ink);font:inherit;font-weight:500;padding:11px;border-radius:10px;cursor:pointer}
+.overlay{position:fixed;inset:0;background:rgba(10,18,26,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+.overlay.show{display:flex}
+.card{background:var(--board);color:var(--ink);border-radius:14px;padding:28px 24px;max-width:340px;width:100%;text-align:center}
+.card h2{font-family:"Fraunces",Georgia,serif;font-size:2rem;margin:0 0 8px}
+.card p{margin:0 0 20px;color:var(--ink-soft);line-height:1.6}
+.card .row{display:flex;gap:10px}
+.card button{flex:1;border:0;background:var(--btn-on);color:var(--btn-on-ink);font:inherit;font-weight:500;padding:12px;border-radius:10px;cursor:pointer}
+.card button.alt{background:var(--btn);color:var(--ink)}
+.hint-keys{color:var(--ink-soft);font-size:.78rem;text-align:center;line-height:1.6}
+@media (hover:none){.hint-keys{display:none}}
+@media (prefers-reduced-motion:reduce){.pop{animation:none}.cell{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>數獨</h1>
+    <div class="meta">
+      <span>錯誤 <b id="mistakes">0</b></span>
+      <span><b id="timer">00:00</b></span>
+    </div>
+  </header>
+
+  <div class="levels" role="group" aria-label="難度">
+    <button data-level="easy">簡單</button>
+    <button data-level="medium">中等</button>
+    <button data-level="hard">困難</button>
+    <button data-level="expert">專家</button>
+  </div>
+
+  <div class="board" id="board" role="grid" aria-label="數獨盤面"></div>
+
+  <div class="tools">
+    <button id="undo" aria-label="復原"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>復原</button>
+    <button id="erase" aria-label="擦除"><svg viewBox="0 0 24 24"><path d="m7 21-4-4 11-11 7 7-8 8Z"/><path d="M7 21h13"/><path d="m9.5 10.5 7 7"/></svg>擦除</button>
+    <button id="notes" aria-pressed="false" aria-label="筆記模式"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>筆記</button>
+    <button id="hint" aria-label="提示"><svg viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2Z"/></svg>提示 <span id="hintsLeft"></span></button>
+  </div>
+
+  <div class="pad" id="pad"></div>
+
+  <button class="newgame" id="newgame">開新局</button>
+  <div class="hint-keys">鍵盤：1–9 填數字、方向鍵移動、Backspace 擦除、N 切換筆記、Ctrl+Z 復原</div>
+  <div class="ver" id="ver"></div>
+</div>
+
+<div class="toast" id="updateToast" role="status"><span>有新版本</span><button id="updateBtn">更新</button></div>
+
+<div class="overlay" id="winBox" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+  <div class="card">
+    <h2 id="winTitle">完成了</h2>
+    <p id="winText"></p>
+    <div class="row"><button id="again">再來一局</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="confirmBox" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="card">
+    <h2 id="confirmTitle" style="font-size:1.4rem">放棄這局？</h2>
+    <p>目前的進度不會保留。</p>
+    <div class="row"><button class="alt" id="cancelNew">繼續玩</button><button id="confirmNew">開新局</button></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const LEVELS = { easy:{name:'簡單',clues:40}, medium:{name:'中等',clues:32}, hard:{name:'困難',clues:27}, expert:{name:'專家',clues:23} };
+  const HINTS = 3;
+  const STORE = 'sudoku-save-v1';
+  const R = i => (i/9)|0, C = i => i%9, B = i => ((R(i)/3)|0)*3 + ((C(i)/3)|0);
+  const PEERS = Array.from({length:81}, (_, i) => {
+    const s = new Set();
+    for (let j=0;j<81;j++) if (j!==i && (R(j)===R(i)||C(j)===C(i)||B(j)===B(i))) s.add(j);
+    return [...s];
+  });
+  const shuffle = a => { for (let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+  const bits = m => { const out=[]; for (let d=1;d<=9;d++) if (m & (1<<d)) out.push(d); return out; };
+
+  // 以位元遮罩回溯求解；limit 用來判斷唯一解
+  function solve(g, limit, randomize){
+    const rows=new Array(9).fill(0), cols=new Array(9).fill(0), boxes=new Array(9).fill(0);
+    for (let i=0;i<81;i++) if (g[i]) { const b=1<<g[i]; rows[R(i)]|=b; cols[C(i)]|=b; boxes[B(i)]|=b; }
+    let count=0, first=null;
+    (function rec(){
+      let best=-1, bestMask=0, bestN=10;
+      for (let i=0;i<81;i++) if (!g[i]) {
+        const m = ~(rows[R(i)]|cols[C(i)]|boxes[B(i)]) & 0x3FE;
+        let n=0; for (let x=m;x;x&=x-1) n++;
+        if (n<bestN){ best=i; bestMask=m; bestN=n; if (n===0) return false; if (n===1) break; }
+      }
+      if (best===-1){ count++; if (!first) first=g.slice(); return count>=limit; }
+      const ds = randomize ? shuffle(bits(bestMask)) : bits(bestMask);
+      const r=R(best), c=C(best), bx=B(best);
+      for (const d of ds){
+        const b=1<<d;
+        g[best]=d; rows[r]|=b; cols[c]|=b; boxes[bx]|=b;
+        if (rec()) { g[best]=0; rows[r]&=~b; cols[c]&=~b; boxes[bx]&=~b; return true; }
+        g[best]=0; rows[r]&=~b; cols[c]&=~b; boxes[bx]&=~b;
+      }
+      return false;
+    })();
+    return {count, first};
+  }
+
+  function generate(level){
+    const solution = solve(new Array(81).fill(0), 1, true).first;
+    const puzzle = solution.slice();
+    let filled = 81;
+    const target = LEVELS[level].clues;
+    for (const i of shuffle([...Array(81).keys()])){
+      if (filled <= target) break;
+      const keep = puzzle[i];
+      puzzle[i] = 0;
+      if (solve(puzzle.slice(), 2, false).count !== 1) puzzle[i] = keep;
+      else filled--;
+    }
+    return {puzzle, solution};
+  }
+
+  // 狀態
+  let S = null, timerId = null;
+  const $ = id => document.getElementById(id);
+  const board = $('board'), pad = $('pad');
+
+  function newGame(level){
+    const {puzzle, solution} = generate(level);
+    S = { level, puzzle, solution, values: puzzle.slice(), notes: new Array(81).fill(0),
+          sel: puzzle.indexOf(0), notesMode:false, history:[], mistakes:0, hints:HINTS, time:0, done:false };
+    save(); render(); startTimer();
+  }
+
+  function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e){} }
+  function load(){
+    try { const s = JSON.parse(localStorage.getItem(STORE)); if (s && s.solution && s.values && LEVELS[s.level]) return s; } catch(e){}
+    return null;
+  }
+
+  function startTimer(){
+    clearInterval(timerId);
+    timerId = setInterval(() => {
+      if (!S || S.done || document.hidden) return;
+      S.time++; $('timer').textContent = fmt(S.time);
+      if (S.time % 5 === 0) save();
+    }, 1000);
+  }
+  const fmt = t => { const h=(t/3600)|0, m=((t%3600)/60)|0, s=t%60; const p=n=>String(n).padStart(2,'0'); return (h? h+':' : '') + p(m)+':'+p(s); };
+
+  // 建立格子與數字鍵
+  const cells = [];
+  for (let i=0;i<81;i++){
+    const el = document.createElement('div');
+    el.className = 'cell' + (C(i)===2||C(i)===5 ? ' br':'') + (R(i)===2||R(i)===5 ? ' bb':'');
+    el.setAttribute('role','gridcell'); el.tabIndex = -1;
+    el.addEventListener('pointerdown', e => { e.preventDefault(); select(i); });
+    board.appendChild(el); cells.push(el);
+  }
+  const padBtns = [];
+  for (let d=1; d<=9; d++){
+    const b = document.createElement('button');
+    b.innerHTML = `<span class="d">${d}</span><span class="n"></span>`;
+    b.setAttribute('aria-label', '填入 '+d);
+    b.addEventListener('click', () => input(d));
+    pad.appendChild(b); padBtns.push(b);
+  }
+
+  function select(i){ if (!S) return; S.sel = i; render(); cells[i].focus({preventScroll:true}); }
+
+  function pushHistory(i){ S.history.push({i, v:S.values[i], n:S.notes[i], peers: PEERS[i].map(p=>[p,S.notes[p]])}); if (S.history.length>200) S.history.shift(); }
+
+  function input(d){
+    if (!S || S.done || S.sel<0) return;
+    const i = S.sel;
+    if (S.puzzle[i]) return;
+    if (S.values[i] && S.values[i]===S.solution[i]) return;
+    if (S.notesMode){
+      if (S.values[i]) return;
+      pushHistory(i);
+      S.notes[i] ^= (1<<d);
+    } else {
+      if (S.values[i]===d) return;
+      pushHistory(i);
+      S.values[i] = d; S.notes[i] = 0;
+      if (d !== S.solution[i]) S.mistakes++;
+      else for (const p of PEERS[i]) S.notes[p] &= ~(1<<d);
+      render(i); save(); checkWin(); return;
+    }
+    render(); save();
+  }
+
+  function erase(){
+    if (!S || S.done) return;
+    const i = S.sel;
+    if (i<0 || S.puzzle[i]) return;
+    if (S.values[i] && S.values[i]===S.solution[i]) return;
+    if (!S.values[i] && !S.notes[i]) return;
+    pushHistory(i); S.values[i]=0; S.notes[i]=0; render(); save();
+  }
+
+  function undo(){
+    if (!S || S.done || !S.history.length) return;
+    const h = S.history.pop();
+    S.values[h.i]=h.v; S.notes[h.i]=h.n; for (const [p,n] of h.peers) S.notes[p]=n;
+    S.sel = h.i; render(); save();
+  }
+
+  function hint(){
+    if (!S || S.done || S.hints<=0) return;
+    let i = S.sel;
+    if (i<0 || S.values[i]===S.solution[i]){
+      const open = [...Array(81).keys()].filter(k => S.values[k]!==S.solution[k]);
+      if (!open.length) return;
+      i = open[Math.random()*open.length|0];
+    }
+    pushHistory(i);
+    S.values[i]=S.solution[i]; S.notes[i]=0; S.hints--; S.sel=i;
+    for (const p of PEERS[i]) S.notes[p] &= ~(1<<S.solution[i]);
+    render(i); save(); checkWin();
+  }
+
+  function checkWin(){
+    if (S.values.every((v,k)=>v===S.solution[k])){
+      S.done = true; save();
+      $('winText').innerHTML = `${LEVELS[S.level].name}難度，用時 ${fmt(S.time)}<br>錯誤 ${S.mistakes} 次，提示用了 ${HINTS-S.hints} 次`;
+      setTimeout(()=>$('winBox').classList.add('show'), 350);
+    }
+  }
+
+  function render(popIndex){
+    if (!S) return;
+    const sel = S.sel, selVal = sel>=0 ? S.values[sel] : 0;
+    const peerSet = sel>=0 ? new Set(PEERS[sel]) : new Set();
+    for (let i=0;i<81;i++){
+      const el = cells[i], v = S.values[i];
+      const cls = ['cell'];
+      if (C(i)===2||C(i)===5) cls.push('br');
+      if (R(i)===2||R(i)===5) cls.push('bb');
+      if (S.puzzle[i]) cls.push('given'); else if (v) cls.push('user');
+      if (v && !S.puzzle[i] && v!==S.solution[i]) cls.push('wrong');
+      if (i===sel) cls.push('sel');
+      else if (selVal && v===selVal) cls.push('same');
+      else if (peerSet.has(i)) cls.push('peer');
+      if (i===popIndex) cls.push('pop');
+      el.className = cls.join(' ');
+      if (v){ el.textContent = v; el.setAttribute('aria-label', `第${R(i)+1}列第${C(i)+1}行，${v}`); }
+      else if (S.notes[i]){
+        el.innerHTML = '<div class="notes">' + [1,2,3,4,5,6,7,8,9].map(d =>
+          `<span class="${(S.notes[i]&(1<<d)) && d===selVal ? 'hl':''}">${S.notes[i]&(1<<d) ? d : ''}</span>`).join('') + '</div>';
+        el.setAttribute('aria-label', `第${R(i)+1}列第${C(i)+1}行，筆記 ${bits(S.notes[i]).join(' ')}`);
+      } else { el.textContent = ''; el.setAttribute('aria-label', `第${R(i)+1}列第${C(i)+1}行，空白`); }
+    }
+    const counts = new Array(10).fill(0);
+    S.values.forEach((v,k)=>{ if (v && v===S.solution[k]) counts[v]++; });
+    padBtns.forEach((b,k)=>{ const left = 9-counts[k+1]; b.querySelector('.n').textContent = left; b.classList.toggle('done', left===0); });
+    pad.classList.toggle('notes-on', S.notesMode);
+    $('notes').setAttribute('aria-pressed', S.notesMode);
+    $('hintsLeft').textContent = S.hints;
+    $('hint').disabled = S.hints<=0 || S.done;
+    $('undo').disabled = !S.history.length || S.done;
+    $('mistakes').textContent = S.mistakes;
+    $('timer').textContent = fmt(S.time);
+    document.querySelectorAll('.levels button').forEach(b => b.setAttribute('aria-pressed', b.dataset.level===S.level));
+  }
+
+  // 事件
+  $('undo').onclick = undo;
+  $('erase').onclick = erase;
+  $('hint').onclick = hint;
+  $('notes').onclick = () => { S.notesMode = !S.notesMode; render(); save(); };
+  let pendingLevel = null;
+  const askNew = level => {
+    pendingLevel = level;
+    const played = S && !S.done && S.values.some((v,k)=>v && !S.puzzle[k]);
+    if (played) $('confirmBox').classList.add('show'); else newGame(level);
+  };
+  $('newgame').onclick = () => askNew(S ? S.level : 'medium');
+  document.querySelectorAll('.levels button').forEach(b => b.onclick = () => askNew(b.dataset.level));
+  $('cancelNew').onclick = () => $('confirmBox').classList.remove('show');
+  $('confirmNew').onclick = () => { $('confirmBox').classList.remove('show'); newGame(pendingLevel); };
+  $('again').onclick = () => { $('winBox').classList.remove('show'); newGame(S.level); };
+
+  document.addEventListener('keydown', e => {
+    if (!S || $('confirmBox').classList.contains('show') || $('winBox').classList.contains('show')) return;
+    const k = e.key;
+    if ((e.ctrlKey||e.metaKey) && k.toLowerCase()==='z'){ e.preventDefault(); undo(); return; }
+    if (/^[1-9]$/.test(k)){ input(+k); return; }
+    if (k==='Backspace'||k==='Delete'||k==='0'){ erase(); return; }
+    if (k==='n'||k==='N'){ S.notesMode=!S.notesMode; render(); return; }
+    const mv = {ArrowUp:-9, ArrowDown:9, ArrowLeft:-1, ArrowRight:1}[k];
+    if (mv!==undefined){
+      e.preventDefault();
+      let i = S.sel<0 ? 0 : S.sel;
+      if (mv===-1 && C(i)===0) i+=8; else if (mv===1 && C(i)===8) i-=8; else i=(i+mv+81)%81;
+      select(i);
+    }
+  });
+
+  const saved = load();
+  if (saved && !saved.done){ S = saved; render(); startTimer(); }
+  else newGame(saved ? saved.level : 'medium');
+})();
+</script>
+
+<script>
+// ===== PWA：離線快取與版本更新 =====
+(() => {
+  if (!('serviceWorker' in navigator)) return;
+  const toast = document.getElementById('updateToast');
+  let waitingWorker = null, userAskedUpdate = false;
+
+  const showUpdate = w => { waitingWorker = w; toast.classList.add('show'); };
+  document.getElementById('updateBtn').onclick = () => {
+    if (!waitingWorker) return;
+    userAskedUpdate = true;
+    waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+  };
+  // 新版接手後重新載入（只在玩家按了「更新」時才重載，遊戲進度已存在 localStorage）
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (userAskedUpdate) location.reload(); });
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.type === 'VERSION') document.getElementById('ver').textContent = '版本 ' + e.data.version;
+  });
+
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./service-worker.js');
+      if (reg.waiting && navigator.serviceWorker.controller) showUpdate(reg.waiting);
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdate(nw);
+        });
+      });
+      navigator.serviceWorker.ready.then(r => r.active && r.active.postMessage({ type: 'GET_VERSION' }));
+      // iPhone 上從背景切回 App 時也檢查一次更新
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    } catch (err) {
+      console.warn('Service Worker 註冊失敗（用 file:// 直接開檔時屬正常）', err);
+    }
+  });
+})();
+</script>
+</body>
+</html>
