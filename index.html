@@ -58,10 +58,39 @@ header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 h1{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:2.4rem;line-height:1;letter-spacing:.04em}
 .meta{display:flex;gap:14px;align-items:baseline;color:var(--ink-soft);font-size:.9rem}
 .meta b{color:var(--ink);font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.15rem;font-variant-numeric:tabular-nums}
-.levels{display:flex;gap:6px;flex-wrap:wrap}
-.levels button{flex:1;min-width:0;border:0;background:transparent;color:var(--ink-soft);font:inherit;font-size:.95rem;
-  padding:8px 0;border-bottom:2px solid var(--line);cursor:pointer}
-.levels button[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:700}
+.mode{display:flex;align-items:center;gap:8px}
+.mode-btn{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);font:inherit;text-align:left;padding:4px 0;cursor:pointer}
+.mode-btn .main{display:block;font-family:"Fraunces","Noto Sans TC",Georgia,serif;font-weight:600;font-size:1.3rem;line-height:1.2}
+.mode-btn .main::after{content:"";display:inline-block;width:.42em;height:.42em;margin-left:.4em;border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;transform:translateY(-.2em) rotate(45deg)}
+.mode-btn .sub{display:block;font-size:.78rem;color:var(--ink-soft)}
+.pill{border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:.85rem;padding:7px 11px;
+  border-radius:999px;cursor:pointer;white-space:nowrap}
+.sheet{background:var(--board);color:var(--ink);border-radius:14px;width:100%;max-width:500px;max-height:100%;display:flex;flex-direction:column;overflow:hidden}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 6px}
+.sheet-head h2{margin:0;font-size:1.2rem}
+.sheet-head .x{border:0;background:transparent;color:var(--ink);font-size:1.6rem;line-height:1;padding:4px 8px;cursor:pointer}
+.sheet-sub{padding:0 16px;color:var(--ink-soft);font-size:.85rem}
+.jump{display:flex;gap:8px;padding:12px 16px 0}
+.jump input{flex:1;min-width:0;border:1.5px solid var(--line);background:transparent;color:var(--ink);font:inherit;font-size:16px;
+  padding:9px 12px;border-radius:10px}
+.jump button{border:0;background:var(--btn-on);color:var(--btn-on-ink);font:inherit;padding:9px 16px;border-radius:10px;cursor:pointer}
+.jump-err{padding:4px 16px 0;color:var(--wrong);font-size:.8rem;min-height:1.2em}
+.pager{display:flex;align-items:center;justify-content:center;gap:18px;padding:6px 16px}
+.pager button{border:0;background:var(--btn);color:var(--ink);width:40px;height:34px;border-radius:8px;font-size:1.1rem;cursor:pointer}
+.pager button:disabled{opacity:.3;cursor:default}
+.pager span{min-width:90px;text-align:center;font-variant-numeric:tabular-nums;font-weight:500}
+.level-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;padding:8px 16px 18px;overflow-y:auto}
+.level-grid button{position:relative;aspect-ratio:1;border:0;border-radius:6px;background:var(--peer);color:var(--ink);
+  font:inherit;font-size:clamp(.6rem,2.6vw,.8rem);font-variant-numeric:tabular-nums;padding:0;cursor:pointer}
+.level-grid button.cleared{background:var(--sel);font-weight:700}
+.level-grid button.going::after{content:"";position:absolute;right:3px;top:3px;width:5px;height:5px;border-radius:50%;background:var(--pen)}
+.level-grid button.current{outline:2px solid var(--ink);outline-offset:-2px}
+.legend{display:flex;gap:14px;padding:4px 16px 0;font-size:.75rem;color:var(--ink-soft)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.debug{position:fixed;top:calc(4px + env(safe-area-inset-top,0px));right:4px;z-index:30;display:flex;gap:6px;align-items:center;
+  background:rgba(0,0,0,.72);color:#fff;font:12px/1.4 system-ui,sans-serif;padding:4px 6px;border-radius:6px}
+.debug button{font:inherit;border:0;border-radius:4px;padding:2px 6px;cursor:pointer}
 .board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(9,1fr);background:var(--board);
   border:2.5px solid var(--line-bold);border-radius:4px;touch-action:manipulation;user-select:none}
 .cell{position:relative;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--line);
@@ -99,14 +128,14 @@ h1{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:2.4re
 .pad.notes-on button .d{color:var(--ink-soft);font-size:clamp(1rem,4.6vw,1.3rem)}
 .pad button.done{visibility:hidden}
 button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
-.newgame{border:1.5px solid var(--ink);background:transparent;color:var(--ink);font:inherit;font-weight:500;padding:11px;border-radius:10px;cursor:pointer}
-.overlay{position:fixed;inset:0;background:rgba(10,18,26,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
+.overlay{position:fixed;inset:0;padding-top:calc(20px + env(safe-area-inset-top,0px));padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));background:rgba(10,18,26,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:10}
 .overlay.show{display:flex}
 .card{background:var(--board);color:var(--ink);border-radius:14px;padding:28px 24px;max-width:340px;width:100%;text-align:center}
 .card h2{font-family:"Fraunces",Georgia,serif;font-size:2rem;margin:0 0 8px}
 .card p{margin:0 0 20px;color:var(--ink-soft);line-height:1.6}
 .card .row{display:flex;gap:10px}
 .card button{flex:1;border:0;background:var(--btn-on);color:var(--btn-on-ink);font:inherit;font-weight:500;padding:12px;border-radius:10px;cursor:pointer}
+.card button[hidden]{display:none}
 .card button.alt{background:var(--btn);color:var(--ink)}
 .hint-keys{color:var(--ink-soft);font-size:.78rem;text-align:center;line-height:1.6}
 @media (hover:none){.hint-keys{display:none}}
@@ -123,11 +152,10 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     </div>
   </header>
 
-  <div class="levels" role="group" aria-label="難度">
-    <button data-level="easy">簡單</button>
-    <button data-level="medium">中等</button>
-    <button data-level="hard">困難</button>
-    <button data-level="expert">專家</button>
+  <div class="mode">
+    <button class="mode-btn" id="modeBtn" aria-label="選擇關卡"><span class="main" id="modeMain">第 1 關</span><span class="sub" id="modeSub"></span></button>
+    <button class="pill" id="randLevelBtn">隨機一關</button>
+    <button class="pill" id="boardBtn">隨機盤面</button>
   </div>
 
   <div class="board" id="board" role="grid" aria-label="數獨盤面"></div>
@@ -141,9 +169,20 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
 
   <div class="pad" id="pad"></div>
 
-  <button class="newgame" id="newgame">開新局</button>
   <div class="hint-keys">鍵盤：1–9 填數字、方向鍵移動、Backspace 擦除、N 切換筆記、Ctrl+Z 復原</div>
   <div class="ver" id="ver"></div>
+</div>
+
+<div class="overlay" id="pickerBox" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="pickerTitle">選擇關卡</h2><button class="x" id="pickerClose" aria-label="關閉">×</button></div>
+    <div class="sheet-sub" id="clearedCount"></div>
+    <div class="jump"><input id="jumpInput" type="number" inputmode="numeric" min="1" max="2000" placeholder="輸入關卡編號" aria-label="關卡編號"><button id="jumpBtn">前往</button></div>
+    <div class="jump-err" id="jumpErr" role="alert"></div>
+    <div class="legend"><span><i style="background:var(--sel)"></i>已過關</span><span><i style="width:6px;height:6px;border-radius:50%;background:var(--pen);vertical-align:1px"></i>進行中</span></div>
+    <div class="pager"><button id="pagePrev" aria-label="上一頁">‹</button><span id="pageLabel"></span><button id="pageNext" aria-label="下一頁">›</button></div>
+    <div class="level-grid" id="levelGrid"></div>
+  </div>
 </div>
 
 <div class="toast" id="updateToast" role="status"><span>有新版本</span><button id="updateBtn">更新</button></div>
@@ -152,34 +191,56 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
   <div class="card">
     <h2 id="winTitle">完成了</h2>
     <p id="winText"></p>
-    <div class="row"><button id="again">再來一局</button></div>
+    <div class="row"><button class="alt" id="winPick">選關</button><button id="winNext">下一關</button></div>
   </div>
 </div>
 
 <div class="overlay" id="confirmBox" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
   <div class="card">
-    <h2 id="confirmTitle" style="font-size:1.4rem">放棄這局？</h2>
-    <p>目前的進度不會保留。</p>
-    <div class="row"><button class="alt" id="cancelNew">繼續玩</button><button id="confirmNew">開新局</button></div>
+    <h2 id="confirmTitle" style="font-size:1.4rem">換一盤隨機盤面？</h2>
+    <p>目前這盤隨機盤面的進度不會保留。固定關卡的進度不受影響。</p>
+    <div class="row"><button class="alt" id="cancelNew">繼續玩</button><button id="confirmNew">換一盤</button></div>
   </div>
 </div>
 
 <script>
 (() => {
-  const LEVELS = { easy:{name:'簡單',clues:40}, medium:{name:'中等',clues:32}, hard:{name:'困難',clues:27}, expert:{name:'專家',clues:23} };
-  const HINTS = 3;
-  const STORE = 'sudoku-save-v1';
+  // ============================================================
+  // CONFIG：所有可調參數集中在這裡
+  // ============================================================
+  const CONFIG = {
+    LEVEL_COUNT: 2000,      // 固定關卡數量
+    CLUES: 23,              // 目標提示數字數量（專家難度；實際可能停在 23–26，才能保證唯一解）
+    HINTS: 3,               // 每盤可用提示次數
+    LEVEL_SALT: 0x5D0C0,    // 關卡種子鹽值。⚠ 改了會讓 1–2000 關內容全部改變，請勿修改
+    PAGE_SIZE: 100,         // 選關畫面每頁關卡數
+    STORE_KEY: 'sudoku-v2', // localStorage 存檔鍵名
+    DEBUG: false,           // 除錯列：FPS、種子、重開、直接完成、下一關
+  };
+
+  // ============================================================
+  // 工具：格子索引、同列同行同宮、可重現的亂數
+  // ============================================================
   const R = i => (i/9)|0, C = i => i%9, B = i => ((R(i)/3)|0)*3 + ((C(i)/3)|0);
   const PEERS = Array.from({length:81}, (_, i) => {
     const s = new Set();
     for (let j=0;j<81;j++) if (j!==i && (R(j)===R(i)||C(j)===C(i)||B(j)===B(i))) s.add(j);
     return [...s];
   });
-  const shuffle = a => { for (let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
   const bits = m => { const out=[]; for (let d=1;d<=9;d++) if (m & (1<<d)) out.push(d); return out; };
+  // mulberry32：同一個種子永遠產生同一串亂數
+  function mulberry32(a){
+    return () => { a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+  }
+  const shuffle = (a, rng) => { for (let i=a.length-1;i>0;i--){const j=rng()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+  const levelSeed = n => (Math.imul(n, 0x9E3779B1) ^ CONFIG.LEVEL_SALT) >>> 0;
+  const fmt = t => { const h=(t/3600)|0, m=((t%3600)/60)|0, s=t%60; const p=n=>String(n).padStart(2,'0'); return (h? h+':' : '') + p(m)+':'+p(s); };
 
-  // 以位元遮罩回溯求解；limit 用來判斷唯一解
-  function solve(g, limit, randomize){
+  // ============================================================
+  // 邏輯：解題器與盤面生成（⚠ 生成流程改了會讓固定關卡改變）
+  // ============================================================
+  // 位元遮罩回溯求解；limit=2 用來判斷唯一解；rng 有給時隨機嘗試順序
+  function solve(g, limit, rng){
     const rows=new Array(9).fill(0), cols=new Array(9).fill(0), boxes=new Array(9).fill(0);
     for (let i=0;i<81;i++) if (g[i]) { const b=1<<g[i]; rows[R(i)]|=b; cols[C(i)]|=b; boxes[B(i)]|=b; }
     let count=0, first=null;
@@ -191,82 +252,110 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
         if (n<bestN){ best=i; bestMask=m; bestN=n; if (n===0) return false; if (n===1) break; }
       }
       if (best===-1){ count++; if (!first) first=g.slice(); return count>=limit; }
-      const ds = randomize ? shuffle(bits(bestMask)) : bits(bestMask);
+      const ds = rng ? shuffle(bits(bestMask), rng) : bits(bestMask);
       const r=R(best), c=C(best), bx=B(best);
       for (const d of ds){
         const b=1<<d;
         g[best]=d; rows[r]|=b; cols[c]|=b; boxes[bx]|=b;
-        if (rec()) { g[best]=0; rows[r]&=~b; cols[c]&=~b; boxes[bx]&=~b; return true; }
+        const stop = rec();
         g[best]=0; rows[r]&=~b; cols[c]&=~b; boxes[bx]&=~b;
+        if (stop) return true;
       }
       return false;
     })();
     return {count, first};
   }
 
-  function generate(level){
-    const solution = solve(new Array(81).fill(0), 1, true).first;
+  // 由種子產生盤面：隨機完整解 → 依隨機順序挖空，每挖一格都確認仍是唯一解
+  function generate(seed){
+    const rng = mulberry32(seed);
+    const solution = solve(new Array(81).fill(0), 1, rng).first;
     const puzzle = solution.slice();
     let filled = 81;
-    const target = LEVELS[level].clues;
-    for (const i of shuffle([...Array(81).keys()])){
-      if (filled <= target) break;
+    for (const i of shuffle([...Array(81).keys()], rng)){
+      if (filled <= CONFIG.CLUES) break;
       const keep = puzzle[i];
       puzzle[i] = 0;
-      if (solve(puzzle.slice(), 2, false).count !== 1) puzzle[i] = keep;
+      if (solve(puzzle.slice(), 2, null).count !== 1) puzzle[i] = keep;
       else filled--;
     }
     return {puzzle, solution};
   }
 
+  // ============================================================
+  // 存檔：每關各自保留進度、過關紀錄
+  // DB = { cur:{mode,level}, prog:{ 'L關卡號' | 'R' : 進度 }, best:{ 關卡號: 最佳秒數 }, notesMode }
+  // ============================================================
+  function loadDB(){
+    try { const d = JSON.parse(localStorage.getItem(CONFIG.STORE_KEY)); if (d && d.prog && d.best) return d; } catch(e){}
+    return { cur:null, prog:{}, best:{}, notesMode:false };
+  }
+  const DB = loadDB();
+  const persist = () => { try { localStorage.setItem(CONFIG.STORE_KEY, JSON.stringify(DB)); } catch(e){} };
+  const keyOf = (mode, level) => mode==='level' ? 'L'+level : 'R';
+
+  // ============================================================
   // 狀態
-  let S = null, timerId = null;
+  // ============================================================
+  let S = null;
   const $ = id => document.getElementById(id);
   const board = $('board'), pad = $('pad');
 
-  function newGame(level){
-    const {puzzle, solution} = generate(level);
-    S = { level, puzzle, solution, values: puzzle.slice(), notes: new Array(81).fill(0),
-          sel: puzzle.indexOf(0), notesMode:false, history:[], mistakes:0, hints:HINTS, time:0, done:false };
-    save(); render(); startTimer();
+  // 把目前盤面寫回存檔
+  function snapshot(){
+    if (!S || S.done) return;
+    const used = S.values.some((v,k)=>v && !S.puzzle[k]) || S.notes.some(n=>n);
+    DB.prog[keyOf(S.mode, S.level)] = { seed:S.seed, v:S.values.join(''), n:S.notes.slice(), m:S.mistakes, h:S.hints, t:S.time, u:used };
+    DB.cur = { mode:S.mode, level:S.level };
+    DB.notesMode = S.notesMode;
+    persist();
   }
 
-  function save(){ try { localStorage.setItem(STORE, JSON.stringify(S)); } catch(e){} }
-  function load(){
-    try { const s = JSON.parse(localStorage.getItem(STORE)); if (s && s.solution && s.values && LEVELS[s.level]) return s; } catch(e){}
-    return null;
+  function start(mode, level, seed){
+    const {puzzle, solution} = generate(seed);
+    S = { mode, level, seed, puzzle, solution, values:puzzle.slice(), notes:new Array(81).fill(0),
+          sel:-1, notesMode:!!DB.notesMode, history:[], mistakes:0, hints:CONFIG.HINTS, time:0, done:false };
+    const rec = DB.prog[keyOf(mode, level)];
+    if (rec && rec.seed === seed && rec.v.length === 81){
+      S.values = rec.v.split('').map(Number); S.notes = rec.n.slice();
+      S.mistakes = rec.m; S.hints = rec.h; S.time = rec.t;
+    }
+    S.sel = S.values.findIndex((v,k)=>v!==solution[k]);
+    DB.cur = { mode, level }; persist();
+    render();
   }
 
-  function startTimer(){
-    clearInterval(timerId);
-    timerId = setInterval(() => {
-      if (!S || S.done || document.hidden) return;
-      S.time++; $('timer').textContent = fmt(S.time);
-      if (S.time % 5 === 0) save();
-    }, 1000);
+  const clampLevel = n => Math.min(CONFIG.LEVEL_COUNT, Math.max(1, n|0));
+  function openLevel(n){ snapshot(); n = clampLevel(n); start('level', n, levelSeed(n)); }
+  // fresh=true：丟掉舊的隨機盤面，產生新的
+  function openRandomBoard(fresh){
+    snapshot();
+    const rec = DB.prog.R;
+    if (fresh) delete DB.prog.R;
+    const seed = (!fresh && rec) ? rec.seed : (Math.random()*4294967296)>>>0;
+    start('random', 0, seed);
   }
-  const fmt = t => { const h=(t/3600)|0, m=((t%3600)/60)|0, s=t%60; const p=n=>String(n).padStart(2,'0'); return (h? h+':' : '') + p(m)+':'+p(s); };
-
-  // 建立格子與數字鍵
-  const cells = [];
-  for (let i=0;i<81;i++){
-    const el = document.createElement('div');
-    el.className = 'cell' + (C(i)===2||C(i)===5 ? ' br':'') + (R(i)===2||R(i)===5 ? ' bb':'');
-    el.setAttribute('role','gridcell'); el.tabIndex = -1;
-    el.addEventListener('pointerdown', e => { e.preventDefault(); select(i); });
-    board.appendChild(el); cells.push(el);
-  }
-  const padBtns = [];
-  for (let d=1; d<=9; d++){
-    const b = document.createElement('button');
-    b.innerHTML = `<span class="d">${d}</span><span class="n"></span>`;
-    b.setAttribute('aria-label', '填入 '+d);
-    b.addEventListener('click', () => input(d));
-    pad.appendChild(b); padBtns.push(b);
+  function randomLevel(){
+    let n;
+    do { n = 1 + (Math.random()*CONFIG.LEVEL_COUNT|0); } while (CONFIG.LEVEL_COUNT>1 && S && S.mode==='level' && n===S.level);
+    openLevel(n);
   }
 
+  // ============================================================
+  // 計時
+  // ============================================================
+  const anyOverlay = () => document.querySelector('.overlay.show');
+  setInterval(() => {
+    if (!S || S.done || document.hidden || anyOverlay()) return;
+    S.time++; $('timer').textContent = fmt(S.time);
+    if (S.time % 5 === 0) snapshot();
+  }, 1000);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) snapshot(); });
+
+  // ============================================================
+  // 輸入處理
+  // ============================================================
   function select(i){ if (!S) return; S.sel = i; render(); cells[i].focus({preventScroll:true}); }
-
   function pushHistory(i){ S.history.push({i, v:S.values[i], n:S.notes[i], peers: PEERS[i].map(p=>[p,S.notes[p]])}); if (S.history.length>200) S.history.shift(); }
 
   function input(d){
@@ -278,15 +367,14 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
       if (S.values[i]) return;
       pushHistory(i);
       S.notes[i] ^= (1<<d);
-    } else {
-      if (S.values[i]===d) return;
-      pushHistory(i);
-      S.values[i] = d; S.notes[i] = 0;
-      if (d !== S.solution[i]) S.mistakes++;
-      else for (const p of PEERS[i]) S.notes[p] &= ~(1<<d);
-      render(i); save(); checkWin(); return;
+      render(); snapshot(); return;
     }
-    render(); save();
+    if (S.values[i]===d) return;
+    pushHistory(i);
+    S.values[i] = d; S.notes[i] = 0;
+    if (d !== S.solution[i]) S.mistakes++;
+    else for (const p of PEERS[i]) S.notes[p] &= ~(1<<d);
+    render(i); snapshot(); checkWin();
   }
 
   function erase(){
@@ -295,14 +383,14 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     if (i<0 || S.puzzle[i]) return;
     if (S.values[i] && S.values[i]===S.solution[i]) return;
     if (!S.values[i] && !S.notes[i]) return;
-    pushHistory(i); S.values[i]=0; S.notes[i]=0; render(); save();
+    pushHistory(i); S.values[i]=0; S.notes[i]=0; render(); snapshot();
   }
 
   function undo(){
     if (!S || S.done || !S.history.length) return;
     const h = S.history.pop();
     S.values[h.i]=h.v; S.notes[h.i]=h.n; for (const [p,n] of h.peers) S.notes[p]=n;
-    S.sel = h.i; render(); save();
+    S.sel = h.i; render(); snapshot();
   }
 
   function hint(){
@@ -316,15 +404,49 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     pushHistory(i);
     S.values[i]=S.solution[i]; S.notes[i]=0; S.hints--; S.sel=i;
     for (const p of PEERS[i]) S.notes[p] &= ~(1<<S.solution[i]);
-    render(i); save(); checkWin();
+    render(i); snapshot(); checkWin();
   }
 
   function checkWin(){
-    if (S.values.every((v,k)=>v===S.solution[k])){
-      S.done = true; save();
-      $('winText').innerHTML = `${LEVELS[S.level].name}難度，用時 ${fmt(S.time)}<br>錯誤 ${S.mistakes} 次，提示用了 ${HINTS-S.hints} 次`;
-      setTimeout(()=>$('winBox').classList.add('show'), 350);
+    if (!S.values.every((v,k)=>v===S.solution[k])) return;
+    S.done = true;
+    delete DB.prog[keyOf(S.mode, S.level)];
+    let line = `用時 ${fmt(S.time)}，錯誤 ${S.mistakes} 次，提示用了 ${CONFIG.HINTS-S.hints} 次`;
+    if (S.mode==='level'){
+      const prev = DB.best[S.level], isBest = prev==null || S.time < prev;
+      if (isBest) DB.best[S.level] = S.time;
+      line += isBest && prev!=null ? '<br>新的最佳紀錄' : `<br>最佳紀錄 ${fmt(DB.best[S.level])}`;
+      $('winTitle').textContent = `第 ${S.level} 關完成`;
+      $('winNext').textContent = S.level < CONFIG.LEVEL_COUNT ? '下一關' : '回到第 1 關';
+      $('winPick').hidden = false;
+    } else {
+      $('winTitle').textContent = '完成了';
+      $('winNext').textContent = '再來一盤';
+      $('winPick').hidden = true;
     }
+    DB.cur = { mode:S.mode, level:S.level };
+    persist(); render();
+    $('winText').innerHTML = line;
+    setTimeout(()=>$('winBox').classList.add('show'), 350);
+  }
+
+  // ============================================================
+  // 渲染：盤面
+  // ============================================================
+  const cells = [];
+  for (let i=0;i<81;i++){
+    const el = document.createElement('div');
+    el.setAttribute('role','gridcell'); el.tabIndex = -1;
+    el.addEventListener('pointerdown', e => { e.preventDefault(); select(i); });
+    board.appendChild(el); cells.push(el);
+  }
+  const padBtns = [];
+  for (let d=1; d<=9; d++){
+    const b = document.createElement('button');
+    b.innerHTML = `<span class="d">${d}</span><span class="n"></span>`;
+    b.setAttribute('aria-label', '填入 '+d);
+    b.addEventListener('click', () => input(d));
+    pad.appendChild(b); padBtns.push(b);
   }
 
   function render(popIndex){
@@ -360,28 +482,84 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     $('undo').disabled = !S.history.length || S.done;
     $('mistakes').textContent = S.mistakes;
     $('timer').textContent = fmt(S.time);
-    document.querySelectorAll('.levels button').forEach(b => b.setAttribute('aria-pressed', b.dataset.level===S.level));
+    // 模式列
+    if (S.mode==='level'){
+      $('modeMain').textContent = `第 ${S.level} 關`;
+      const best = DB.best[S.level];
+      $('modeSub').textContent = best!=null ? `已過關・最佳 ${fmt(best)}` : '點這裡選關';
+      $('boardBtn').textContent = '隨機盤面';
+    } else {
+      $('modeMain').textContent = '隨機盤面';
+      $('modeSub').textContent = '不在關卡編號內・點這裡選關';
+      $('boardBtn').textContent = '換一盤';
+    }
+    if (CONFIG.DEBUG) $('dbgSeed').textContent = 'seed ' + S.seed;
   }
 
+  // ============================================================
+  // 渲染：選關畫面
+  // ============================================================
+  let page = 0;
+  const pageCount = Math.ceil(CONFIG.LEVEL_COUNT / CONFIG.PAGE_SIZE);
+  function openPicker(){
+    if (S && S.mode==='level') page = Math.floor((S.level-1)/CONFIG.PAGE_SIZE);
+    $('jumpErr').textContent = ''; $('jumpInput').value = '';
+    renderPicker(); $('pickerBox').classList.add('show');
+  }
+  const closePicker = () => $('pickerBox').classList.remove('show');
+  function renderPicker(){
+    const a = page*CONFIG.PAGE_SIZE + 1, b = Math.min(a+CONFIG.PAGE_SIZE-1, CONFIG.LEVEL_COUNT);
+    $('pageLabel').textContent = `${a}–${b}`;
+    $('pagePrev').disabled = page===0; $('pageNext').disabled = page===pageCount-1;
+    $('clearedCount').textContent = `已過關 ${Object.keys(DB.best).length} / ${CONFIG.LEVEL_COUNT}`;
+    let html = '';
+    for (let n=a; n<=b; n++){
+      const cls = [];
+      if (DB.best[n]!=null) cls.push('cleared');
+      const rec = DB.prog['L'+n]; if (rec && rec.u) cls.push('going');
+      if (S && S.mode==='level' && S.level===n) cls.push('current');
+      const state = DB.best[n]!=null ? '，已過關' : (rec && rec.u ? '，進行中' : '');
+      html += `<button class="${cls.join(' ')}" data-n="${n}" aria-label="第${n}關${state}">${n}</button>`;
+    }
+    $('levelGrid').innerHTML = html;
+  }
+  function jump(){
+    const n = parseInt($('jumpInput').value, 10);
+    if (!(n>=1 && n<=CONFIG.LEVEL_COUNT)) { $('jumpErr').textContent = `請輸入 1–${CONFIG.LEVEL_COUNT}`; return; }
+    closePicker(); openLevel(n);
+  }
+
+  // ============================================================
   // 事件
+  // ============================================================
   $('undo').onclick = undo;
   $('erase').onclick = erase;
   $('hint').onclick = hint;
-  $('notes').onclick = () => { S.notesMode = !S.notesMode; render(); save(); };
-  let pendingLevel = null;
-  const askNew = level => {
-    pendingLevel = level;
-    const played = S && !S.done && S.values.some((v,k)=>v && !S.puzzle[k]);
-    if (played) $('confirmBox').classList.add('show'); else newGame(level);
+  $('notes').onclick = () => { S.notesMode = !S.notesMode; render(); snapshot(); };
+  $('modeBtn').onclick = openPicker;
+  $('randLevelBtn').onclick = randomLevel;
+  $('boardBtn').onclick = () => {
+    if (S.mode!=='random') { openRandomBoard(false); return; }
+    const played = !S.done && S.values.some((v,k)=>v && !S.puzzle[k]);
+    if (played) $('confirmBox').classList.add('show'); else openRandomBoard(true);
   };
-  $('newgame').onclick = () => askNew(S ? S.level : 'medium');
-  document.querySelectorAll('.levels button').forEach(b => b.onclick = () => askNew(b.dataset.level));
   $('cancelNew').onclick = () => $('confirmBox').classList.remove('show');
-  $('confirmNew').onclick = () => { $('confirmBox').classList.remove('show'); newGame(pendingLevel); };
-  $('again').onclick = () => { $('winBox').classList.remove('show'); newGame(S.level); };
+  $('confirmNew').onclick = () => { $('confirmBox').classList.remove('show'); openRandomBoard(true); };
+  $('winNext').onclick = () => {
+    $('winBox').classList.remove('show');
+    if (S.mode==='level') openLevel(S.level < CONFIG.LEVEL_COUNT ? S.level+1 : 1); else openRandomBoard(true);
+  };
+  $('winPick').onclick = () => { $('winBox').classList.remove('show'); openPicker(); };
+  $('pickerClose').onclick = closePicker;
+  $('pagePrev').onclick = () => { if (page>0){ page--; renderPicker(); } };
+  $('pageNext').onclick = () => { if (page<pageCount-1){ page++; renderPicker(); } };
+  $('levelGrid').onclick = e => { const b = e.target.closest('button[data-n]'); if (b){ closePicker(); openLevel(+b.dataset.n); } };
+  $('jumpBtn').onclick = jump;
+  $('jumpInput').addEventListener('keydown', e => { if (e.key==='Enter') jump(); });
 
   document.addEventListener('keydown', e => {
-    if (!S || $('confirmBox').classList.contains('show') || $('winBox').classList.contains('show')) return;
+    if (e.key==='Escape'){ closePicker(); $('confirmBox').classList.remove('show'); return; }
+    if (!S || anyOverlay()) return;
     const k = e.key;
     if ((e.ctrlKey||e.metaKey) && k.toLowerCase()==='z'){ e.preventDefault(); undo(); return; }
     if (/^[1-9]$/.test(k)){ input(+k); return; }
@@ -396,9 +574,32 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     }
   });
 
-  const saved = load();
-  if (saved && !saved.done){ S = saved; render(); startTimer(); }
-  else newGame(saved ? saved.level : 'medium');
+  // ============================================================
+  // 除錯列（CONFIG.DEBUG 為 true 時才出現）
+  // ============================================================
+  if (CONFIG.DEBUG){
+    const bar = document.createElement('div');
+    bar.className = 'debug';
+    bar.innerHTML = '<span id="fps">-- FPS</span><span id="dbgSeed"></span>' +
+      '<button data-a="restart">重開</button><button data-a="solve">完成</button><button data-a="next">下一關</button>';
+    document.body.appendChild(bar);
+    let frames = 0, last = performance.now();
+    (function loop(now){ frames++; if (now-last >= 1000){ $('fps').textContent = frames + ' FPS'; frames = 0; last = now; } requestAnimationFrame(loop); })(last);
+    bar.onclick = e => {
+      const a = e.target.dataset.a; if (!a || !S) return;
+      if (a==='restart'){ delete DB.prog[keyOf(S.mode, S.level)]; S.done = true; start(S.mode, S.level, S.seed); }
+      if (a==='solve' && !S.done){ S.values = S.solution.slice(); checkWin(); }
+      if (a==='next') openLevel(S.mode==='level' ? S.level+1 : 1);
+    };
+  }
+
+  // ============================================================
+  // 啟動：回到上次的關卡或隨機盤面
+  // ============================================================
+  try { localStorage.removeItem('sudoku-save-v1'); } catch(e){}   // 清掉舊版存檔
+  if (DB.cur && DB.cur.mode==='random' && DB.prog.R) openRandomBoard(false);
+  else if (DB.cur && DB.cur.mode==='level') openLevel(DB.cur.level);
+  else openLevel(1);
 })();
 </script>
 
