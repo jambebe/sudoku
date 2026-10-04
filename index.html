@@ -114,7 +114,7 @@ h1{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:2.4re
 .notes span.hl{color:var(--ink);font-weight:700}
 .pop{animation:pop .22s ease-out}
 @keyframes pop{0%{transform:scale(.6)}100%{transform:scale(1)}}
-.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tools{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .tools button{border:0;background:transparent;color:var(--ink);font:inherit;font-size:.85rem;display:flex;flex-direction:column;
   align-items:center;gap:4px;padding:6px 0;cursor:pointer;border-radius:10px}
 .tools svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -147,7 +147,6 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
   <header>
     <h1>數獨</h1>
     <div class="meta">
-      <span>錯誤 <b id="mistakes">0</b></span>
       <span><b id="timer">00:00</b></span>
     </div>
   </header>
@@ -164,12 +163,13 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     <button id="undo" aria-label="復原"><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>復原</button>
     <button id="erase" aria-label="擦除"><svg viewBox="0 0 24 24"><path d="m7 21-4-4 11-11 7 7-8 8Z"/><path d="M7 21h13"/><path d="m9.5 10.5 7 7"/></svg>擦除</button>
     <button id="notes" aria-pressed="false" aria-label="筆記模式"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>筆記</button>
+    <button id="convert" aria-label="筆記全部填入（每個筆記格只剩一個數字時可用）"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m8 12 3 3 5-6"/></svg>筆記填入</button>
     <button id="hint" aria-label="提示"><svg viewBox="0 0 24 24"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2Z"/></svg>提示 <span id="hintsLeft"></span></button>
   </div>
 
   <div class="pad" id="pad"></div>
 
-  <div class="hint-keys">鍵盤：1–9 填數字、方向鍵移動、Backspace 擦除、N 切換筆記、Ctrl+Z 復原</div>
+  <div class="hint-keys">鍵盤：1–9 填數字、方向鍵移動、Backspace 擦除、N 切換筆記、F 筆記填入、Ctrl+Z 復原</div>
   <div class="ver" id="ver"></div>
 </div>
 
@@ -305,7 +305,7 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
   function snapshot(){
     if (!S || S.done) return;
     const used = S.values.some((v,k)=>v && !S.puzzle[k]) || S.notes.some(n=>n);
-    DB.prog[keyOf(S.mode, S.level)] = { seed:S.seed, v:S.values.join(''), n:S.notes.slice(), m:S.mistakes, h:S.hints, t:S.time, u:used };
+    DB.prog[keyOf(S.mode, S.level)] = { seed:S.seed, v:S.values.join(''), n:S.notes.slice(), h:S.hints, t:S.time, u:used };
     DB.cur = { mode:S.mode, level:S.level };
     DB.notesMode = S.notesMode;
     persist();
@@ -314,11 +314,11 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
   function start(mode, level, seed){
     const {puzzle, solution} = generate(seed);
     S = { mode, level, seed, puzzle, solution, values:puzzle.slice(), notes:new Array(81).fill(0),
-          sel:-1, notesMode:!!DB.notesMode, history:[], mistakes:0, hints:CONFIG.HINTS, time:0, done:false };
+          sel:-1, notesMode:!!DB.notesMode, history:[], hints:CONFIG.HINTS, time:0, done:false };
     const rec = DB.prog[keyOf(mode, level)];
     if (rec && rec.seed === seed && rec.v.length === 81){
       S.values = rec.v.split('').map(Number); S.notes = rec.n.slice();
-      S.mistakes = rec.m; S.hints = rec.h; S.time = rec.t;
+      S.hints = rec.h; S.time = rec.t;
     }
     S.sel = S.values.findIndex((v,k)=>v!==solution[k]);
     DB.cur = { mode, level }; persist();
@@ -372,8 +372,7 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     if (S.values[i]===d) return;
     pushHistory(i);
     S.values[i] = d; S.notes[i] = 0;
-    if (d !== S.solution[i]) S.mistakes++;
-    else for (const p of PEERS[i]) S.notes[p] &= ~(1<<d);
+    if (d === S.solution[i]) for (const p of PEERS[i]) S.notes[p] &= ~(1<<d);
     render(i); snapshot(); checkWin();
   }
 
@@ -386,10 +385,35 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     pushHistory(i); S.values[i]=0; S.notes[i]=0; render(); snapshot();
   }
 
+  // 筆記填入：盤面上每個「有筆記的空格」都只剩一個筆記時才可使用
+  function canConvert(){
+    if (!S || S.done) return false;
+    let any = false;
+    for (let i=0;i<81;i++){
+      const n = S.notes[i];
+      if (S.values[i] || !n) continue;
+      if (n & (n-1)) return false;   // 超過一個筆記
+      any = true;
+    }
+    return any;
+  }
+  function convertNotes(){
+    if (!canConvert()) return;
+    S.history.push({ all:true, values:S.values.slice(), notes:S.notes.slice() });
+    if (S.history.length>200) S.history.shift();
+    const list = [];
+    for (let i=0;i<81;i++) if (!S.values[i] && S.notes[i]) list.push([i, Math.log2(S.notes[i])]);
+    for (const [i,d] of list){ S.values[i] = d; S.notes[i] = 0; }
+    // 填對的數字，清掉同列、同行、同宮的相同筆記（與單格填入規則一致）
+    for (const [i,d] of list) if (d === S.solution[i]) for (const p of PEERS[i]) S.notes[p] &= ~(1<<d);
+    render(); snapshot(); checkWin();
+  }
+
   function undo(){
     if (!S || S.done || !S.history.length) return;
     const h = S.history.pop();
-    S.values[h.i]=h.v; S.notes[h.i]=h.n; for (const [p,n] of h.peers) S.notes[p]=n;
+    if (h.all){ S.values = h.values; S.notes = h.notes; }   // 整批操作（筆記填入）
+    else { S.values[h.i]=h.v; S.notes[h.i]=h.n; for (const [p,n] of h.peers) S.notes[p]=n; }
     S.sel = h.i; render(); snapshot();
   }
 
@@ -411,7 +435,7 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     if (!S.values.every((v,k)=>v===S.solution[k])) return;
     S.done = true;
     delete DB.prog[keyOf(S.mode, S.level)];
-    let line = `用時 ${fmt(S.time)}，錯誤 ${S.mistakes} 次，提示用了 ${CONFIG.HINTS-S.hints} 次`;
+    let line = `用時 ${fmt(S.time)}，提示用了 ${CONFIG.HINTS-S.hints} 次`;
     if (S.mode==='level'){
       const prev = DB.best[S.level], isBest = prev==null || S.time < prev;
       if (isBest) DB.best[S.level] = S.time;
@@ -480,7 +504,7 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     $('hintsLeft').textContent = S.hints;
     $('hint').disabled = S.hints<=0 || S.done;
     $('undo').disabled = !S.history.length || S.done;
-    $('mistakes').textContent = S.mistakes;
+    $('convert').disabled = !canConvert();
     $('timer').textContent = fmt(S.time);
     // 模式列
     if (S.mode==='level'){
@@ -535,6 +559,7 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
   $('undo').onclick = undo;
   $('erase').onclick = erase;
   $('hint').onclick = hint;
+  $('convert').onclick = convertNotes;
   $('notes').onclick = () => { S.notesMode = !S.notesMode; render(); snapshot(); };
   $('modeBtn').onclick = openPicker;
   $('randLevelBtn').onclick = randomLevel;
@@ -565,6 +590,7 @@ button:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
     if (/^[1-9]$/.test(k)){ input(+k); return; }
     if (k==='Backspace'||k==='Delete'||k==='0'){ erase(); return; }
     if (k==='n'||k==='N'){ S.notesMode=!S.notesMode; render(); return; }
+    if (k==='f'||k==='F'){ convertNotes(); return; }
     const mv = {ArrowUp:-9, ArrowDown:9, ArrowLeft:-1, ArrowRight:1}[k];
     if (mv!==undefined){
       e.preventDefault();
