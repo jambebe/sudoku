@@ -91,9 +91,9 @@ h1{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:2.4re
 .debug{position:fixed;top:calc(4px + env(safe-area-inset-top,0px));right:4px;z-index:30;display:flex;gap:6px;align-items:center;
   background:rgba(0,0,0,.72);color:#fff;font:12px/1.4 system-ui,sans-serif;padding:4px 6px;border-radius:6px}
 .debug button{font:inherit;border:0;border-radius:4px;padding:2px 6px;cursor:pointer}
-.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(9,1fr);background:var(--board);
+.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(9,minmax(0,1fr));grid-template-rows:repeat(9,minmax(0,1fr));background:var(--board);
   border:2.5px solid var(--line-bold);border-radius:4px;touch-action:manipulation;user-select:none}
-.cell{position:relative;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--line);
+.cell{position:relative;min-width:0;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--line);
   border-bottom:1px solid var(--line);font-family:"Fraunces",Georgia,serif;font-size:clamp(1.2rem,6vw,1.9rem);cursor:pointer;
   transition:background-color .12s}
 .cell:nth-child(9n){border-right:0}
